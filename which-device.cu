@@ -18,7 +18,7 @@ int main()
 	std::cout << "max threads/blocks:\t" << prop.maxThreadsPerBlock << std::endl;
 	std::cout << "max threads in each dimension:\t" << prop.maxThreadsDim[0] << ", " << prop.maxThreadsDim[1] << ", "  << prop.maxThreadsDim[1] << std::endl;
 	std::cout << "max blocks in each dimension:\t" << prop.maxGridSize[0] << ", "  << prop.maxGridSize[1] << ", "  << prop.maxGridSize[1] << std::endl;
-	std::cout << "Nb of multiproc on device:\t" << prop.multiProcessorCount << prop.maxGridSize[1] << std::endl;
+	std::cout << "Nb of multiproc on device:\t" << prop.multiProcessorCount  << std::endl;
    }
 
 }

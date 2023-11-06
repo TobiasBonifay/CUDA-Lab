@@ -5,8 +5,8 @@ NVCC = /usr/local/cuda/bin/nvcc
 #CUDA_FLAGS = -gencode arch=compute_61,code=sm_61 
 # Use the next line for Pascal with integrated GPU (Jetson TX2)
 # CUDA_FLAGS = -gencode arch=compute_62,code=sm_62
-# Use the next line for Ampere architecture
-CUDA_FLAGS = -gencode arch=compute_86,code=sm_86
+# Use the next line for Ampere A100 architecture
+CUDA_FLAGS = -gencode arch=compute_80,code=sm_80
 
 which-device:  which-device.cu
 	$(NVCC) $(CUDA_FLAGS) $< -o $@
