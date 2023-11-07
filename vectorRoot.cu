@@ -19,6 +19,7 @@
  */
 
 #include <stdio.h>
+#include <math.h>
 
 // For the CUDA runtime routines (prefixed with "cuda_")
 #include <cuda_runtime.h>
@@ -30,13 +31,13 @@
  * The 3 vectors have the same number of elements numElements.
  */
 __global__
-void vectorAdd(const float *A, const float *B, float *C, unsigned long numElements)
+void vectorRoot(const float *A, float *C, unsigned long numElements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
 
     if (i < numElements)
     {
-        C[i] = A[i] + B[i];
+        C[i] = sqrt(A[i]);
     }
 }
 
@@ -109,7 +110,6 @@ int main(int argc, char** argv)
     for (int i = 0; i < numElements; ++i)
     {
         h_A[i] = rand()/(float)RAND_MAX;
-        h_B[i] = rand()/(float)RAND_MAX;
     }
 
     // 1a. Allocate the device input vectors A & B
@@ -117,9 +117,6 @@ int main(int argc, char** argv)
     float * d_A = NULL;
     err = cudaMalloc((void **)&d_A, size);
     checkErr(err, "Failed to allocate device vector A");
-    float * d_B = NULL;
-    err = cudaMalloc((void **)&d_B, size);
-    checkErr(err, "Failed to allocate device vector B");
 
 
     // 1.b. Allocate the device output vector C
@@ -137,10 +134,6 @@ int main(int argc, char** argv)
 
     err = cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
     checkErr(err, "Failed to copy device vector A from host to device");
-
-
-    err = cudaMemcpy(d_B, h_B, size, cudaMemcpyHostToDevice);
-    checkErr(err, "Failed to copy device vector B from host to device");
     
     cudaEventRecord(stop_copying_to_device, 0);
     cudaEventSynchronize(stop_copying_to_device);
@@ -164,7 +157,7 @@ int main(int argc, char** argv)
     } else
         printf("CUDA kernel launch with %d blocks of %d threads\n", blocksPerGrid, threadsPerBlock);
 
-    vectorAdd<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, numElements);
+    vectorRoot<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_C, numElements);
     err = cudaGetLastError();
     checkErr(err, "Failed to launch vectorA:dd kernel");
     
@@ -197,7 +190,7 @@ int main(int argc, char** argv)
     // Verify that the result vector is correct
     for (int i = 0; i < numElements; ++i)
     {
-        if (fabs(h_A[i] + h_B[i] - h_C[i]) > 1e-5)
+        if (fabs(sqrt(h_A[i])- h_C[i]) > 1e-5)
         {
             fprintf(stderr, "Result verification failed at element %d!\n", i);
             exit(EXIT_FAILURE);
@@ -211,9 +204,6 @@ int main(int argc, char** argv)
     err = cudaFree(d_A);
     checkErr(err, "Failed to free device vector A");
 
-    err = cudaFree(d_B);
-    checkErr(err, "Failed to free device vector B");
-
     err = cudaFree(d_C);
     checkErr(err, "Failed to free device vector C");
 
@@ -224,7 +214,7 @@ int main(int argc, char** argv)
 
     for (int i = 0; i < numElements; ++i)
     {
-       h_C[i] = h_A[i] + h_B[i];
+       h_C[i] = sqrt(h_A[i]);
     }
     
     cudaEventRecord(stop_seq, 0);
@@ -236,7 +226,7 @@ int main(int argc, char** argv)
     // verify again
     for (int i = 0; i < numElements; ++i)
     {
-        if (fabs(h_A[i] + h_B[i] - h_C[i]) > 1e-5)
+        if (fabs(sqrt(h_A[i]) - h_C[i]) > 1e-5)
         {
             fprintf(stderr, "Result verification failed at element %d!\n", i);
             exit(EXIT_FAILURE);

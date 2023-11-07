@@ -14,7 +14,10 @@ which-device:  which-device.cu
 timing: timing.cu
 	$(NVCC) $(CUDA_FLAGS) $< -o $@
 
-vectorAdd: vectorAdd.cu
+vectorAdd: vectorAddOld.cu
+	$(NVCC) $(CUDA_FLAGS) $< -o $@
+
+vectorMult: vectorMult.cu
 	$(NVCC) $(CUDA_FLAGS) $< -o $@
 
 all = vectorAdd timing which-device

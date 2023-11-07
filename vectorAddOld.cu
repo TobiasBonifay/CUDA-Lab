@@ -40,7 +40,7 @@ void vectorAdd(const float *A, const float *B, float *C, unsigned long numElemen
     }
 }
 
-void checkErr(cudaError_t err, const char* msg) 
+void checkErr(cudaError_t err, const char* msg)
 {
     if (err != cudaSuccess)
     {
@@ -56,8 +56,11 @@ int main(int argc, char** argv)
 {
     // Get the property device
     // TO BE COMPLETED
-    int threadsPerBlock=1024;
-    int maxBlocks=2147483647;
+    // get device properties
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, 0);
+    int maxBlocks = prop.maxGridSize[0];
+    int threadsPerBlock = prop.maxThreadsPerBlock;
     printf("max of %d blocks of %d threads\n", maxBlocks, threadsPerBlock);
     
     // To mesure different execution time
@@ -66,7 +69,7 @@ int main(int argc, char** argv)
     cudaEvent_t start_copying_to_host, stop_copying_to_host;
     cudaEvent_t start_seq, stop_seq;
     
-    float CUDA1, CUDA2, CUDA3, SEQ;
+    float copy_to_device_time, kernel_time, copy_to_host_time, sequential_time;
 
     cudaEventCreate(&start_copying_to_device); 
     cudaEventCreate(&stop_copying_to_device);
@@ -113,14 +116,12 @@ int main(int argc, char** argv)
     }
 
     // 1a. Allocate the device input vectors A & B
-
     float * d_A = NULL;
     err = cudaMalloc((void **)&d_A, size);
     checkErr(err, "Failed to allocate device vector A");
     float * d_B = NULL;
     err = cudaMalloc((void **)&d_B, size);
     checkErr(err, "Failed to allocate device vector B");
-
 
     // 1.b. Allocate the device output vector C
     float * d_C = NULL;
@@ -144,11 +145,11 @@ int main(int argc, char** argv)
     
     cudaEventRecord(stop_copying_to_device, 0);
     cudaEventSynchronize(stop_copying_to_device);
-    cudaEventElapsedTime(&CUDA1, start_copying_to_device, stop_copying_to_device);
+    cudaEventElapsedTime(&copy_to_device_time, start_copying_to_device, stop_copying_to_device);
     cudaEventDestroy(start_copying_to_device);
     cudaEventDestroy(stop_copying_to_device);
 
-    printf("CUDA copying time from host to device: %lf\n", CUDA1); 
+    printf("CUDA copying time from host to device: %lf\n", copy_to_device_time);
 
     // 3. Launch the Vector Add CUDA Kernel
 
@@ -170,11 +171,11 @@ int main(int argc, char** argv)
     
     cudaEventRecord(stop_sum, 0);
     cudaEventSynchronize(stop_sum);
-    cudaEventElapsedTime(&CUDA2, start_sum, stop_sum);
+    cudaEventElapsedTime(&kernel_time, start_sum, stop_sum);
     cudaEventDestroy(start_sum);
     cudaEventDestroy(stop_sum);
     
-    printf("CUDA executing time on device: %lf\n", CUDA2); 
+    printf("CUDA executing time on device: %lf\n", kernel_time);
 
     // 4. Copy the device result vector in device memory
     //     to the host result vector in host memory.
@@ -188,11 +189,11 @@ int main(int argc, char** argv)
     
     cudaEventRecord(stop_copying_to_host, 0);
     cudaEventSynchronize(stop_copying_to_host);
-    cudaEventElapsedTime(&CUDA3, start_copying_to_host, stop_copying_to_host);
+    cudaEventElapsedTime(&copy_to_host_time, start_copying_to_host, stop_copying_to_host);
     cudaEventDestroy(start_copying_to_host);
     cudaEventDestroy(stop_copying_to_host);
 
-    printf("CUDA copying time from device to host: %lf\n", CUDA3); 
+    printf("CUDA copying time from device to host: %lf\n", copy_to_host_time);
 
     // Verify that the result vector is correct
     for (int i = 0; i < numElements; ++i)
@@ -204,7 +205,7 @@ int main(int argc, char** argv)
         }
     }
     printf("CUDA test PASSED\n");
-    printf("CUDA time: %lf\n", CUDA1+CUDA2+CUDA3); 
+    printf("CUDA time: %lf\n", copy_to_device_time+kernel_time+copy_to_host_time);
     printf("CUDA blocksPerGrid= %i, threadsPerBlock= %i\n", blocksPerGrid, threadsPerBlock);
 
     // Free device global memory
@@ -229,7 +230,7 @@ int main(int argc, char** argv)
     
     cudaEventRecord(stop_seq, 0);
     cudaEventSynchronize(stop_seq);
-    cudaEventElapsedTime(&SEQ, start_seq, stop_seq);
+    cudaEventElapsedTime(&sequential_time, start_seq, stop_seq);
     cudaEventDestroy(start_seq);
     cudaEventDestroy(stop_seq);
 
@@ -244,7 +245,7 @@ int main(int argc, char** argv)
     }
     printf("\nNormal test PASSED\n");
     
-    printf("Normal time: %lf\n", SEQ); 
+    printf("Normal time: %lf\n", sequential_time);
     
     // Free host memory
     free(h_A);
@@ -255,7 +256,7 @@ int main(int argc, char** argv)
     err = cudaDeviceReset();
     checkErr(err, "Unable to reset device");
 
-    fprintf(stderr, "%d, %lf, %lf, %lf, %lf\n", numElements, CUDA1, CUDA2, CUDA3, SEQ);
+    fprintf(stderr, "%d, %lf, %lf, %lf, %lf\n", numElements, copy_to_device_time, kernel_time, copy_to_host_time, sequential_time);
 
     printf("Done\n");
     return 0;
