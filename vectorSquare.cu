@@ -254,7 +254,6 @@ int main(int argc, char** argv)
     // Reset the device and exit
     err = cudaDeviceReset();
     checkErr(err, "Unable to reset device");
-vectorMult
     fprintf(stderr, "%d, %lf, %lf, %lf, %lf\n", numElements, CUDA1, CUDA2, CUDA3, SEQ);
 
     printf("Done\n");
