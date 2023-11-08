@@ -20,7 +20,13 @@ vectorAdd: vectorAddOld.cu
 vectorMult: vectorMult.cu
 	$(NVCC) $(CUDA_FLAGS) $< -o $@
 
-all = vectorAdd timing which-device
+vectorRoot: vectorRoot.cu
+	$(NVCC) $(CUDA_FLAGS) $< -o $@
+
+vectorSquare: vectorSquare.cu
+	$(NVCC) $(CUDA_FLAGS) $< -o $@
+
+all: which-device timing vectorAdd vectorMult vectorRoot
 
 clean: 
 	rm -rf *o $(TARGET)
