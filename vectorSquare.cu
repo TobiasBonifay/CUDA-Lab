@@ -26,11 +26,11 @@
 /**
  * CUDA Kernel Device code
  *
- * Computes the vector addition of A and B into C. 
+ * Computes the vector addition of Ainto C.
  * The 3 vectors have the same number of elements numElements.
  */
 __global__
-void vectorAdd(const float *A, const float *B, float *C, unsigned long numElements)
+void vectorAdd(const float *A, float *C, unsigned long numElements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -91,15 +91,13 @@ int main(int argc, char** argv)
     size_t size = numElements * sizeof(float);
     printf("[Vector addition of %lu elements]\n", numElements);
 
-    // Allocate the host input vectors A & B
+    // Allocate the host input vectors A
     float * h_A = (float *)malloc(size);
-    float * h_B = (float *)malloc(size);
-
     // Allocate the host output vector C
     float * h_C = (float *)malloc(size);
 
     // Verify that allocations succeeded
-    if (h_A == NULL || h_B == NULL || h_C == NULL)
+    if (h_A == NULL || h_C == NULL)
     {
         fprintf(stderr, "Failed to allocate host vectors!\n");
         exit(EXIT_FAILURE);
@@ -109,25 +107,20 @@ int main(int argc, char** argv)
     for (int i = 0; i < numElements; ++i)
     {
         h_A[i] = rand()/(float)RAND_MAX;
-        h_B[i] = rand()/(float)RAND_MAX;
     }
 
-    // 1a. Allocate the device input vectors A & B
+    // 1a. Allocate the device input vectors A
 
     float * d_A = NULL;
     err = cudaMalloc((void **)&d_A, size);
     checkErr(err, "Failed to allocate device vector A");
-    float * d_B = NULL;
-    err = cudaMalloc((void **)&d_B, size);
-    checkErr(err, "Failed to allocate device vector B");
-
 
     // 1.b. Allocate the device output vector C
     float * d_C = NULL;
     err = cudaMalloc((void **)&d_C, size);
     checkErr(err, "Failed to allocate device vector C");
 
-    // 2. Copy the host input vectors A and B in host memory 
+    // 2. Copy the host input vectors A
     //     to the device input vectors in device memory
     printf("Copy input data from the host memory to the CUDA device\n");
 
@@ -138,10 +131,6 @@ int main(int argc, char** argv)
     err = cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
     checkErr(err, "Failed to copy device vector A from host to device");
 
-
-    err = cudaMemcpy(d_B, h_B, size, cudaMemcpyHostToDevice);
-    checkErr(err, "Failed to copy device vector B from host to device");
-    
     cudaEventRecord(stop_copying_to_device, 0);
     cudaEventSynchronize(stop_copying_to_device);
     cudaEventElapsedTime(&CUDA1, start_copying_to_device, stop_copying_to_device);
@@ -164,7 +153,7 @@ int main(int argc, char** argv)
     } else
         printf("CUDA kernel launch with %d blocks of %d threads\n", blocksPerGrid, threadsPerBlock);
 
-    vectorAdd<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, numElements);
+    vectorAdd<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_C, numElements);
     err = cudaGetLastError();
     checkErr(err, "Failed to launch vectorA:dd kernel");
     
@@ -211,9 +200,6 @@ int main(int argc, char** argv)
     err = cudaFree(d_A);
     checkErr(err, "Failed to free device vector A");
 
-    err = cudaFree(d_B);
-    checkErr(err, "Failed to free device vector B");
-
     err = cudaFree(d_C);
     checkErr(err, "Failed to free device vector C");
 
@@ -248,7 +234,6 @@ int main(int argc, char** argv)
     
     // Free host memory
     free(h_A);
-    free(h_B);
     free(h_C);
 
     // Reset the device and exit
