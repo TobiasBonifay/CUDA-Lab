@@ -11,7 +11,7 @@
  */
 
 /**
- * Vector addition: C = A + B.
+ * Vector addition: C = A .
  *
  * This sample is a very basic sample that implements element by element
  * vector addition. It is the same as the sample illustrating Chapter 2

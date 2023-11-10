@@ -10,14 +10,6 @@
  * Some modification for UCA Lab on october 2021
  */
 
-/**
- * Vector addition: C = A + B.
- *
- * This sample is a very basic sample that implements element by element
- * vector addition. It is the same as the sample illustrating Chapter 2
- * of the programming guide with some additions like error checking.
- */
-
 #include <stdio.h>
 #include <math.h>
 
@@ -27,7 +19,7 @@
 /**
  * CUDA Kernel Device code
  *
- * Computes the vector addition of A and B into C. 
+ * Computes the vector root of A into C.
  * The 3 vectors have the same number of elements numElements.
  */
 __global__
@@ -92,15 +84,14 @@ int main(int argc, char** argv)
     size_t size = numElements * sizeof(float);
     printf("[Vector addition of %lu elements]\n", numElements);
 
-    // Allocate the host input vectors A & B
+    // Allocate the host input vectors A
     float * h_A = (float *)malloc(size);
-    float * h_B = (float *)malloc(size);
 
     // Allocate the host output vector C
     float * h_C = (float *)malloc(size);
 
     // Verify that allocations succeeded
-    if (h_A == NULL || h_B == NULL || h_C == NULL)
+    if (h_A == NULL || h_C == NULL)
     {
         fprintf(stderr, "Failed to allocate host vectors!\n");
         exit(EXIT_FAILURE);
@@ -112,7 +103,7 @@ int main(int argc, char** argv)
         h_A[i] = rand()/(float)RAND_MAX;
     }
 
-    // 1a. Allocate the device input vectors A & B
+    // 1a. Allocate the device input vectors A
 
     float * d_A = NULL;
     err = cudaMalloc((void **)&d_A, size);
@@ -124,7 +115,7 @@ int main(int argc, char** argv)
     err = cudaMalloc((void **)&d_C, size);
     checkErr(err, "Failed to allocate device vector C");
 
-    // 2. Copy the host input vectors A and B in host memory 
+    // 2. Copy the host input vectors A
     //     to the device input vectors in device memory
     printf("Copy input data from the host memory to the CUDA device\n");
 
@@ -238,7 +229,6 @@ int main(int argc, char** argv)
     
     // Free host memory
     free(h_A);
-    free(h_B);
     free(h_C);
 
     // Reset the device and exit
