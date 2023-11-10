@@ -26,7 +26,7 @@
 /**
  * CUDA Kernel Device code
  *
- * Computes the vector addition of A and B into C. 
+ * Computes the vector multiplication of A and B into C.
  * The 3 vectors have the same number of elements numElements.
  */
 __global__

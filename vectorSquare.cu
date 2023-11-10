@@ -10,13 +10,6 @@
  * Some modification for UCA Lab on october 2021
  */
 
-/**
- * Vector addition: C = A .
- *
- * This sample is a very basic sample that implements element by element
- * vector addition. It is the same as the sample illustrating Chapter 2
- * of the programming guide with some additions like error checking.
- */
 
 #include <stdio.h>
 
@@ -26,7 +19,7 @@
 /**
  * CUDA Kernel Device code
  *
- * Computes the vector addition of Ainto C.
+ * Computes the vector multiplication of A into C.
  * The 3 vectors have the same number of elements numElements.
  */
 __global__
